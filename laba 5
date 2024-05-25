@@ -1,56 +1,78 @@
 """Задана рекуррентная функция. Область определения функции – натуральные числа. 
 Написать программу сравнительного вычисления данной функции рекурсивно и итерационно (значение, время). 
 Определить (смоделировать) границы применимости рекурсивного и итерационного подхода.
+Результаты сравнительного исследования времени вычисления представить в табличной и графической форме."""
 
-import time
-import math
+import timeit
 import matplotlib.pyplot as plt
+import math
 
-def recursive_F(n, facn, val):
+last_factorial = 1
+def factorial(n):
+    global last_factorial
+    last_factorial = n * last_factorial
+    return last_factorial
+
+def recursive_factorial(n):
+    if n == 1 or n==0:
+        return 1
+    else:
+        return n * recursive_factorial(n-1)
+
+def iterative_factorial(n):
+    result = 1
+    for i in range(1, n+1):
+        result *= i
+    return result
+
+k=-1
+last_F_value = 1;
+step = 1
+def recursive_F(n):
+    global last_F_value
     if n == 0 or n == 1:
         return 3
     elif n > 23:
-        val*=-1
-        return (val * ((3 - recursive_F(n-1, facn, val))/factorial(n, facn) - (n-2)))
-    else:
-        return (n-2) * recursive_F(n-1, facn, val)
+        k = (-1)**n
+        return k * (3 - recursive_F(n - 1) / recursive_factorial(2 * n) - (n - 2))
+    elif n <= 23 and n > 1:
+        return (n - 2) * recursive_F(n - 1)
 
-def iterative_F(n, facn, val):
-    if n == 0 or n == 1:
-        return 3
-    result = 0
-    a, b = 1, 1
-    for i in range(2, n+1):
+c=-1
+last_factorial = 1
+def iterative_F(n):
+    global c, last_factorial
+    F = [0] * (n + 1) 
+    F[0] = 3
+    F[1] = 3
+    for i in range(2, n + 1):
         if i > 23:
-            val*=-1
-            result = (val * ((3 - (a+b))/factorial(i, facn) - (i-2)))
-            a, b = b, result
+            c = (-1)**i 
+            F[i] = c * (3 - F[i - 1] / iterative_factorial(2 * i) - (i - 2)) 
         else:
-            result = (i-2) * (a+b)
-            a, b = b, result
-    return result
+            if i > 1 and i <= 23:
+                F[i] = (i - 2) * F[i - 1]
 
-def factorial(n, facn):
-    faсn *= (2*n * factorial(2*n-1))
-    return facn
+def score_time(func, n):
+    return timeit.timeit(lambda: func(n), number=1000)
 
-n = int(input("Введите значение n: "))
-odin = int(input("Введите число -1 или 1: "))
-while not (-1 == odin or odin == 1):
-    print("Это число не является 1 или -1. Повторите ввод.")
-    odin = int(input("Введите число -1 или 1 "))
-c = 2
 
-start_time = time.time()
-print("Recursive time: %s seconds" % (time.time() - start_time))
+n_values = range(1, 26)
+recursive_times = []
+iterative_times = []
 
-start_time = time.time()
-print("Iterative time: %s seconds" % (time.time() - start_time))
+for n in n_values:
+    recursive_times.append(score_time(recursive_factorial, n))
+    iterative_times.append(score_time(iterative_factorial, n))
 
-labels = ['Recursive', 'Iterative']
-times = [recursive_time, iterative_time]
+print(f"{'n':<10}{'Рекурсивное время (мс)':<25}{'Итерационное время (мс)':<25}")
+for i, n in enumerate(n_values):
+    print(f"{n:<10}{recursive_times[i]:<25}{iterative_times[i]:<25}")
 
-plt.bar(labels, times)
-plt.ylabel('Время (s)')
-plt.title('Исследования времени вычисления итерации и рекурсии'')
+plt.plot(n_values, recursive_times, label='Рекурсивно')
+plt.plot(n_values, iterative_times, label='Итерационно')
+plt.xlabel('n')
+plt.ylabel('Время (в миллисекундах)')
+plt.legend()
+plt.title('Сравнение времени вычисления функции F(n)')
 plt.show()
